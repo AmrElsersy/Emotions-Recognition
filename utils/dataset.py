@@ -4,11 +4,10 @@ email: amrelsersay@gmail.com
 -----------------------------------------------------------------------------------
 Description: FER2013 dataset
 """
-import torch
 import argparse
 import cv2
 from torch.utils import data
-from torch.utils.data import Dataset, DataLoader, dataloader
+from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 import os
 import numpy as np
