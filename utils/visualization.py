@@ -1,9 +1,12 @@
 import numpy as np
+import torch
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import argparse 
 from dataset import FER2013
 from utils import get_label_emotion
+
+import torch.utils.tensorboard as tensorboard
 
 
 class FER2013_Visualizer:
@@ -38,21 +41,38 @@ if __name__ == '__main__':
     parser.add_argument('--grid_size',type=int,choices=[2,3,4,5],default=3,help='size of matplotlib vis grid of images')
     parser.add_argument('--datapath', type=str, default='../data')
     parser.add_argument('--tensorboard', action='store_true', help='tensorboard visualization')
-    parser.add_argument('--n_batch', type=int, default=5, help='number of batches to be visualized in tensorboard')
+    parser.add_argument('--logdir', type=str, default='../checkpoint/tensorboard', help='tensorboard logdir')
+    parser.add_argument('--stop', type=int, default=5, help='number of batches to be visualized in tensorboard')
     parser.add_argument('--batch_size', type=int, default=64,help='num of images in each tensorboard batch vis')
     args = parser.parse_args()
 
     dataset = FER2013(root=args.datapath, mode = args.mode)
-    dataloader = DataLoader(dataset, batch_size=9, shuffle=False)
-    visualizer = FER2013_Visualizer()
 
     # Visualization
     if not args.tensorboard:
+        dataloader = DataLoader(dataset, batch_size=args.grid_size * args.grid_size, shuffle=False)
+        visualizer = FER2013_Visualizer(n_grid=args.grid_size)
+
         for images, emotions in dataloader:
             visualizer.visualize(images.numpy(), emotions.numpy())
             visualizer.show()
 
     # Tensorboard
     else:
+        writer = tensorboard.SummaryWriter(args.logdir)
+        dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
+        
+        batch = 0
         for images, emotions in dataloader:
-            pass
+            batch += 1
+
+            # add 1 in channels dim => (batch_size, 48, 48, 1)
+            images = torch.unsqueeze(images, axis=3) 
+            writer.add_images("images", images, global_step=batch, dataformats="NHWC")
+            print ("*" * 60, f'\n\n\t Saved {args.batch_size} images with Step{batch}. run tensorboard @ project root')
+            
+            if batch == args.stop:
+                break
+
+        writer.close()
+
