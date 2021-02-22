@@ -4,6 +4,7 @@ email: amrelsersay@gmail.com
 -----------------------------------------------------------------------------------
 Description: Mini-Xception for a real time Emotion Recognition 
 """
+
 import sys
 
 from torch.nn.modules.activation import ReLU
@@ -87,9 +88,9 @@ class Mini_Xception(nn.Module):
         for block in self.residual_blocks:
             x = block(x)
 
-        print(x.shape)
+        print('blocks:',x.shape)
         x = self.conv3(x)
-        print(x.shape)
+        print('conv3',x.shape)
         x = self.global_avg_pool(x)
         # x = self.softmax(x)
 
@@ -97,7 +98,8 @@ class Mini_Xception(nn.Module):
 
 
 if __name__ == '__main__':
-    x = torch.randn((2, 1, 64,64))
+    # x = torch.randn((2, 1, 64,64))
+    x = torch.randn((2, 1, 48,48))
     conv1 = conv_bn_relu(1, 8, kernel_size=3, stride=1, padding=0)
     conv2 = conv_bn_relu(8, 8, kernel_size=3, stride=1, padding=0)
     print(f'x.shape {x.shape}')
@@ -121,7 +123,7 @@ if __name__ == '__main__':
     print('*'*50)
     x = torch.randn((2, 1, 48,48))
     model = Mini_Xception()
+    # print(model)
     y = model(x)
     print(f'y.shape {y.squeeze().shape}')
-
 
