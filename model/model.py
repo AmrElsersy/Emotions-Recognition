@@ -12,7 +12,7 @@ sys.path.insert(1, '../')
 
 import torch
 import torch.nn as nn
-from depthwise_conv import SeparableConv2D
+from .depthwise_conv import SeparableConv2D
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # device = torch.device('cpu')

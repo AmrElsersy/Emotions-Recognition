@@ -28,7 +28,7 @@ from sklearn.metrics import precision_score, recall_score, accuracy_score, f1_sc
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=300, help='num of training epochs')
-    parser.add_argument('--batch_size', type=int, default=32, help="training batch size")
+    parser.add_argument('--batch_size', type=int, default=16, help="training batch size")
     parser.add_argument('--tensorboard', type=str, default='checkpoint/tensorboard', help='path log dir of tensorboard')
     parser.add_argument('--logging', type=str, default='checkpoint/logging', help='path of logging')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
@@ -78,7 +78,7 @@ def main():
     # ========================================================================
     for epoch in range(start_epoch, args.epochs):
         # =========== train / validate ===========
-        # train_loss = train_one_epoch(mini_xception, loss, optimizer, train_dataloader, epoch)
+        train_loss = train_one_epoch(mini_xception, loss, optimizer, train_dataloader, epoch)
         val_loss, accuracy, percision, recall = validate(mini_xception, loss, test_dataloader, epoch)
         scheduler.step(val_loss)
         logging.info(f"\ttraining epoch={epoch} .. train_loss={train_loss}")
