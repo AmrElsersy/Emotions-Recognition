@@ -1,3 +1,9 @@
+"""
+Author: Amr Elsersy
+email: amrelsersay@gmail.com
+-----------------------------------------------------------------------------------
+Description: utils functions
+"""
 import numpy as np
 
 def get_label_emotion(label : int) -> str:
@@ -12,7 +18,7 @@ def get_label_emotion(label : int) -> str:
     }
     return label_emotion_map[label]
 
-def standerlization(face):
+def normalization(face):
     face = (face - np.mean(face))/ np.std(face)
-    face = (face * 255).astype(np.uint8)
+    # face = (face * 255).astype(np.uint8)
     return face

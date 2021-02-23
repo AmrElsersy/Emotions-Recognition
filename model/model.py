@@ -12,7 +12,7 @@ sys.path.insert(1, '../')
 
 import torch
 import torch.nn as nn
-from depthwise_conv import SeparableConv2D
+from .depthwise_conv import SeparableConv2D
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -47,20 +47,20 @@ class ResidualXceptionBlock(nn.Module):
         residual = self.residual_conv(x)
         residual = self.residual_bn(residual)
         
-        print('input',x.shape)
+        # print('input',x.shape)
         # feature extraction branch
         x = self.depthwise_conv1(x)
-        print('conv1',x.shape)
+        # print('conv1',x.shape)
         x = self.bn1(x)
         x = self.relu1(x)
 
         x = self.depthwise_conv2(x)
-        print('conv2',x.shape)
+        # print('conv2',x.shape)
         x = self.bn2(x)
         # x = self.padd(x)
         x = self.maxpool(x)
-        print('max_pooling',x.shape)
-        print('res',residual.shape)
+        # print('max_pooling',x.shape)
+        # print('res',residual.shape)
         return x + residual
 
 class Mini_Xception(nn.Module):
@@ -88,9 +88,9 @@ class Mini_Xception(nn.Module):
         for block in self.residual_blocks:
             x = block(x)
 
-        print('blocks:',x.shape)
+        # print('blocks:',x.shape)
         x = self.conv3(x)
-        print('conv3',x.shape)
+        # print('conv3',x.shape)
         x = self.global_avg_pool(x)
         # x = self.softmax(x)
 

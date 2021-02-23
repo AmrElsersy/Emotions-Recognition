@@ -6,13 +6,13 @@ Description: FER2013 dataset
 """
 import argparse
 import cv2
-from torch.utils import data
 from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms.transforms as transforms
 import pandas as pd
 import os
 import numpy as np
 
-from utils import get_label_emotion
+from .utils import get_label_emotion
 
 
 class FER2013(Dataset):
@@ -62,12 +62,12 @@ class FER2013(Dataset):
 
 
 def create_train_dataloader(root='../data', batch_size=64):
-    dataset = FER2013(root, mode='train')
+    dataset = FER2013(root, mode='train', transform=transforms.ToTensor())
     dataloader = DataLoader(dataset, batch_size, shuffle=True)
     return dataloader
 
-def create_val_dataloader(root='../data', batch_size=1):
-    dataset = FER2013(root, mode='val')
+def create_val_dataloader(root='../data', batch_size=2):
+    dataset = FER2013(root, mode='val', transform=transforms.ToTensor())
     dataloader = DataLoader(dataset, batch_size, shuffle=False)
     return dataloader
 

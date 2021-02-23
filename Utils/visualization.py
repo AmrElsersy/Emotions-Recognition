@@ -1,3 +1,9 @@
+"""
+Author: Amr Elsersy
+email: amrelsersay@gmail.com
+-----------------------------------------------------------------------------------
+Description: FER2013 Visualization with matplotlib & tensorboard
+"""
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
