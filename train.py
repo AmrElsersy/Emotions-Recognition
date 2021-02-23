@@ -23,10 +23,12 @@ from model.model import Mini_Xception
 from model.depthwise_conv import SeparableConv2D
 from Utils.dataset import create_train_dataloader, create_val_dataloader
 
+from sklearn.metrics import precision_score, recall_score, accuracy_score, f1_score
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=800, help='num of training epochs')
-    parser.add_argument('--batch_size', type=int, default=24, help="training batch size")
+    parser.add_argument('--epochs', type=int, default=300, help='num of training epochs')
+    parser.add_argument('--batch_size', type=int, default=32, help="training batch size")
     parser.add_argument('--tensorboard', type=str, default='checkpoint/tensorboard', help='path log dir of tensorboard')
     parser.add_argument('--logging', type=str, default='checkpoint/logging', help='path of logging')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
@@ -35,7 +37,7 @@ def parse_args():
     parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights.pth1.tar',help='load checkpoint')
     parser.add_argument('--resume', action='store_true', help='resume from pretrained path specified in prev arg')
     parser.add_argument('--savepath', type=str, default='checkpoint/model_weights', help='save checkpoint path')    
-    parser.add_argument('--savefreq', type=int, default=1, help="save weights each freq num of epochs")
+    parser.add_argument('--savefreq', type=int, default=5, help="save weights each freq num of epochs")
     parser.add_argument('--logdir', type=str, default='checkpoint/logging', help='logging')    
     parser.add_argument("--lr_patience", default=40, type=int)
     args = parser.parse_args()
@@ -46,7 +48,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 args = parse_args()
 # logging
 logging.basicConfig(
-format='[%(asctime)s] [p%(process)s] [%(pathname)s:%(lineno)d] [%(levelname)s] %(message)s',
+format='[%(message)s',
 level=logging.INFO,
 handlers=[logging.FileHandler(args.logdir, mode='w'), logging.StreamHandler()])
 # tensorboard
@@ -76,12 +78,13 @@ def main():
     # ========================================================================
     for epoch in range(start_epoch, args.epochs):
         # =========== train / validate ===========
-        train_loss = train_one_epoch(mini_xception, loss, optimizer, train_dataloader, epoch)
-        val_loss, accuracy = validate(mini_xception, loss, test_dataloader, epoch)
+        # train_loss = train_one_epoch(mini_xception, loss, optimizer, train_dataloader, epoch)
+        val_loss, accuracy, percision, recall = validate(mini_xception, loss, test_dataloader, epoch)
         scheduler.step(val_loss)
         logging.info(f"\ttraining epoch={epoch} .. train_loss={train_loss}")
-        logging.info(f"\validation epoch={epoch} .. val_loss={val_loss}")
-        logging.info(f"\validation epoch={epoch} .. accuracy={accuracy * 100} %")
+        logging.info(f"\tvalidation epoch={epoch} .. val_loss={val_loss}")
+        logging.info(f'\tAccuracy = {accuracy} .. Percision = {percision} .. Recall = {recall}')
+        time.sleep(2)
         # ============= tensorboard =============
         writer.add_scalar('train_loss',train_loss, epoch)
         writer.add_scalar('val_loss',val_loss, epoch)
@@ -101,7 +104,7 @@ def train_one_epoch(model, criterion, optimizer, dataloader, epoch):
     model.train()
     model.to(device)
     loss = 0
-
+    print(model)
     for images, labels in tqdm(dataloader):
 
         images = images.to(device) # (batch, 1, 48, 48)
@@ -112,7 +115,7 @@ def train_one_epoch(model, criterion, optimizer, dataloader, epoch):
         emotions = torch.squeeze(emotions)
 
         loss = criterion(emotions, labels)
-        print(f'training loss = {round(loss.item(),3)}')
+        print(f'training @ epoch {epoch} .. loss = {round(loss.item(),3)}')
 
         optimizer.zero_grad()
         loss.backward()
@@ -126,6 +129,9 @@ def validate(model, criterion, dataloader, epoch):
     losses = []
     TP = 0
 
+    total_pred = []
+    total_labels = []
+
     with torch.no_grad():
         for images, labels in tqdm(dataloader):
             mini_batch = images.shape[0]
@@ -135,25 +141,46 @@ def validate(model, criterion, dataloader, epoch):
             emotions = model(images)
             emotions = torch.squeeze(emotions)
             emotions = emotions.reshape(mini_batch, -1)
-            # print(emotions.shape, labels.shape)
 
             loss = criterion(emotions, labels)            
-            losses.append(loss)
+            losses.append(loss.cpu().item())
+
+            # softmax = nn.Softmax()
+            # logsoft = nn.LogSoftmax()
+            # emotions_soft = softmax(emotions)
+            # emotions_logsoft = logsoft(emotions)
+            # l2 = nn.NLLLoss()
+            # loss2 = l2(emotions_logsoft, labels)
+            # print(f'softmax {emotions_soft}')
+            # print(f'log softmax {emotions_logsoft}')
+            # print(f'NLL {loss2}')
+            # print(f'emotions {emotions}\n')
+            # # ============== Evaluation ===============
 
             # index of the max value of each sample (shape = (batch,))
             _, indexes = torch.max(emotions, axis=1)
-            TruePositive = (indexes == labels).sum().item()
-            TP += TruePositive
             # print(indexes.shape, labels.shape)
+            total_pred.extend(indexes.cpu().detach().numpy())
+            total_labels.extend(labels.cpu().detach().numpy())
 
-            print(f'validation loss = {round(loss.item(),3)}')
+            # print(f'validation loss = {round(loss.item(),3)}')
 
-    val_loss = np.mean(losses).item()
-    val_loss = round(val_loss, 3)
-    accuracy = round(TP/3500, 3)
+        val_loss = np.mean(losses).item()
+        percision = precision_score(total_labels, total_pred, average='macro')
+        recall = recall_score(total_labels, total_pred, average='macro')
+        accuracy = accuracy_score(total_labels, total_pred)
 
-    print(f'Accuracy = {accuracy}')
-    return val_loss, accuracy
+        val_loss, accuracy, percision, recall = round(val_loss,3), round(accuracy,3), round(percision,3), round(recall,3)
+        print(f'Val loss = {val_loss} .. Accuracy = {accuracy} .. Percision = {percision} .. Recall = {recall}')
+        return val_loss, accuracy, percision, recall
 
 if __name__ == "__main__":
     main()
+    # total_labels = [0, 1, 2, 0]
+    # total_pred =   [0, 2, 1, 2]
+    # avg = None
+    # avg = 'macro'
+    # percision = precision_score(total_labels, total_pred, average=avg)
+    # recall = recall_score(total_labels, total_pred, average=avg)
+    # accuracy = accuracy_score(total_labels, total_pred)
+    # print(percision, recall, accuracy)

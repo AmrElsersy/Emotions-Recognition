@@ -1,3 +1,0 @@
-[2021-02-23 15:20:05,116] [p26089] [train.py:82] [INFO] 	training epoch=0 .. train_loss=1.5493601560592651
-[2021-02-23 15:20:05,117] [p26089] [train.py:83] [INFO] alidation epoch=0 .. val_loss=1.551
-[2021-02-23 15:20:05,117] [p26089] [train.py:84] [INFO] alidation epoch=0 .. accuracy=40.9 %
