@@ -81,7 +81,7 @@ def main():
         scheduler.step(val_loss)
         logging.info(f"\ttraining epoch={epoch} .. train_loss={train_loss}")
         logging.info(f"\validation epoch={epoch} .. val_loss={val_loss}")
-        logging.info(f"\validation epoch={epoch} .. accuracy={accuracy}")
+        logging.info(f"\validation epoch={epoch} .. accuracy={accuracy * 100} %")
         # ============= tensorboard =============
         writer.add_scalar('train_loss',train_loss, epoch)
         writer.add_scalar('val_loss',val_loss, epoch)
@@ -150,7 +150,7 @@ def validate(model, criterion, dataloader, epoch):
 
     val_loss = np.mean(losses).item()
     val_loss = round(val_loss, 3)
-    accuracy = TP/3500
+    accuracy = round(TP/3500, 3)
 
     print(f'Accuracy = {accuracy}')
     return val_loss, accuracy
