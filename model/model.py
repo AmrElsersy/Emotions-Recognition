@@ -12,16 +12,38 @@ sys.path.insert(1, '../')
 
 import torch
 import torch.nn as nn
-from .depthwise_conv import SeparableConv2D
+# from .depthwise_conv import SeparableConv2D
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# device = torch.device('cpu')
+
 def conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, padding=0):
     return nn.Sequential(
         nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, bias=False),
         nn.BatchNorm2d(out_channels),
         nn.ReLU(inplace=True)
     )
+
+class SeparableConv2D(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel=3):
+        super(SeparableConv2D, self).__init__()
+
+        self.depth_wise_conv = nn.Conv2d(in_channels, in_channels, kernel_size=kernel, stride=1, 
+                                        groups=in_channels,padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(in_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.point_wise_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        # depth wise
+        x = self.depth_wise_conv(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        # point wise
+        x = self.point_wise_conv(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+        return x
 
 class ResidualXceptionBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel=3):
@@ -35,11 +57,10 @@ class ResidualXceptionBlock(nn.Module):
         self.depthwise_conv2 = SeparableConv2D(out_channels, out_channels, kernel).to(device)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
-        self.padd = nn.ZeroPad2d(22)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.residual_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, padding=22, bias=False)
-        # self.residual_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, padding=0, bias=False)
-
+        # self.padd = nn.ZeroPad2d(22)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+        # self.residual_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=2, padding=22, bias=False)
+        self.residual_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
         self.residual_bn = nn.BatchNorm2d(out_channels)
 
     def forward(self, x):
@@ -55,10 +76,12 @@ class ResidualXceptionBlock(nn.Module):
         x = self.relu1(x)
 
         x = self.depthwise_conv2(x)
-        # print('conv2',x.shape)
         x = self.bn2(x)
-        x = self.padd(x)
+        # print('conv2',x.shape)
+
+        # x = self.padd(x)
         x = self.maxpool(x)
+        # print(x[:,:, 11:22, 11:22])
         # print('max_pooling',x.shape)
         # print('res',residual.shape)
         return x + residual
@@ -101,30 +124,30 @@ class Mini_Xception(nn.Module):
 
 if __name__ == '__main__':
     # x = torch.randn((2, 1, 64,64))
-    x = torch.randn((2, 1, 48,48))
-    conv1 = conv_bn_relu(1, 8, kernel_size=3, stride=1, padding=0)
-    conv2 = conv_bn_relu(8, 8, kernel_size=3, stride=1, padding=0)
-    print(f'x.shape {x.shape}')
-    x = conv1(x)
-    print(f'x.shape {x.shape}')
-    x = conv2(x)
-    print(f'x.shape {x.shape}')
-    xception_block = ResidualXceptionBlock(8, 16)
-    x = xception_block(x)
-    print(f'\nx.shape {x.shape}')
-    xception_block = ResidualXceptionBlock(16, 32)
-    x = xception_block(x)
-    print(f'\nx.shape {x.shape}')
-    xception_block = ResidualXceptionBlock(32, 64)
-    x = xception_block(x)
-    print(f'\nx.shape {x.shape}')
-    xception_block = ResidualXceptionBlock(64, 128)
-    x = xception_block(x)
-    print(f'\nx.shape {x.shape}')
+    # x = torch.randn((2, 1, 48,48))
+    # conv1 = conv_bn_relu(1, 8, kernel_size=3, stride=1, padding=0)
+    # conv2 = conv_bn_relu(8, 8, kernel_size=3, stride=1, padding=0)
+    # print(f'x.shape {x.shape}')
+    # x = conv1(x)
+    # print(f'x.shape {x.shape}')
+    # x = conv2(x)
+    # print(f'x.shape {x.shape}')
+    # xception_block = ResidualXceptionBlock(8, 16)
+    # x = xception_block(x)
+    # print(f'\nx.shape {x.shape}')
+    # xception_block = ResidualXceptionBlock(16, 32)
+    # x = xception_block(x)
+    # print(f'\nx.shape {x.shape}')
+    # xception_block = ResidualXceptionBlock(32, 64)
+    # x = xception_block(x)
+    # print(f'\nx.shape {x.shape}')
+    # xception_block = ResidualXceptionBlock(64, 128)
+    # x = xception_block(x)
+    # print(f'\nx.shape {x.shape}')
 
     print('*'*50)
-    x = torch.randn((2, 1, 48,48))
-    model = Mini_Xception()
+    x = torch.randn((2, 1, 48,48)).to(device)
+    model = Mini_Xception().to(device)
     # print(model)
     y = model(x)
     print(f'y.shape {y.squeeze().shape}')

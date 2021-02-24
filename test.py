@@ -29,7 +29,7 @@ from Utils.utils import get_label_emotion
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=300, help='num of training epochs')
-    parser.add_argument('--batch_size', type=int, default=32, help="training batch size")
+    parser.add_argument('--batch_size', type=int, default=1, help="training batch size")
     parser.add_argument('--tensorboard', type=str, default='checkpoint/tensorboard', help='path log dir of tensorboard')
     parser.add_argument('--logging', type=str, default='checkpoint/logging', help='path of logging')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
@@ -52,9 +52,10 @@ args = parse_args()
 def main():
     mini_xception = Mini_Xception()
     mini_xception.to(device)
+    mini_xception.eval()
 
     checkpoint = torch.load(args.pretrained)
-    mini_xception.load_state_dict(checkpoint['mini_xception'])
+    mini_xception.load_state_dict(checkpoint['mini_xception'], strict=False)
     print(f'\tLoaded checkpoint from {args.pretrained}\n')
 
     dataset = FER2013(args.datapath, args.mode, transform=transforms.ToTensor())
@@ -75,7 +76,9 @@ def main():
             softmax = nn.Softmax()
             emotions_soft = softmax(emotion.squeeze()).reshape(-1,1).cpu().detach().numpy()
             emotions_soft = np.round(emotions_soft, 3)
-            print(f'softmax {emotions_soft}')
+            for i, em in enumerate(emotions_soft):
+                print(f'{get_label_emotion(i)} : {em.item()}')
+            # print(f'softmax {emotions_soft}')
 
             _, emotion = torch.max(emotion, axis=1)
 
@@ -90,41 +93,6 @@ def main():
             print('')
 
 
-def validate(model, criterion, dataloader, epoch):
-    model.eval()
-    model.to(device)
-    losses = []
-    TP = 0
-
-    with torch.no_grad():
-        for images, labels in tqdm(dataloader):
-            mini_batch = images.shape[0]
-            images = images.to(device)
-            labels = labels.to(device)
-
-            emotions = model(images)
-            emotions = torch.squeeze(emotions)
-            emotions = emotions.reshape(mini_batch, -1)
-            # print(emotions.shape, labels.shape)
-
-            loss = criterion(emotions, labels)            
-            print(type(loss))
-            losses.append(loss.cpu().item())
-
-            # index of the max value of each sample (shape = (batch,))
-            _, indexes = torch.max(emotions, axis=1)
-            TruePositive = (indexes == labels).sum().item()
-            TP += TruePositive
-            # print(indexes.shape, labels.shape)
-
-            print(f'validation loss = {round(loss.item(),3)}')
-
-    val_loss = np.mean(losses).item()
-    val_loss = round(val_loss, 3)
-    accuracy = round(TP/3500, 3)
-
-    print(f'Accuracy = {accuracy}')
-    return val_loss, accuracy
 
 if __name__ == "__main__":
     main()

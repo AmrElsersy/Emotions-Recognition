@@ -21,7 +21,7 @@ cudnn.enabled = True
 
 from model.model import Mini_Xception
 from model.depthwise_conv import SeparableConv2D
-from Utils.dataset import create_train_dataloader, create_val_dataloader
+from Utils.dataset import create_train_dataloader, create_val_dataloader, create_test_dataloader
 
 from sklearn.metrics import precision_score, recall_score, accuracy_score, f1_score
 
@@ -34,12 +34,13 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--weight_decay', type=float, default=1e-6, help='optimizer weight decay')
     parser.add_argument('--datapath', type=str, default='data', help='root path of augumented WFLW dataset')
-    parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights.pth1.tar',help='load checkpoint')
+    parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_52.pth.tar',help='load checkpoint')
     parser.add_argument('--resume', action='store_true', help='resume from pretrained path specified in prev arg')
     parser.add_argument('--savepath', type=str, default='checkpoint/model_weights', help='save checkpoint path')    
-    parser.add_argument('--savefreq', type=int, default=5, help="save weights each freq num of epochs")
+    parser.add_argument('--savefreq', type=int, default=2, help="save weights each freq num of epochs")
     parser.add_argument('--logdir', type=str, default='checkpoint/logging', help='logging')    
     parser.add_argument("--lr_patience", default=40, type=int)
+    parser.add_argument('--evaluate', action='store_true', help='evaluation only')
     args = parser.parse_args()
     return args
 # ======================================================================
@@ -63,16 +64,26 @@ def main():
     mini_xception = Mini_Xception()
     loss = nn.CrossEntropyLoss()
     # ========= load weights ===========
-    if args.resume:
+    if args.resume or args.evaluate:
         checkpoint = torch.load(args.pretrained)
-        mini_xception.load_state_dict(checkpoint['mini_xception'])
+        mini_xception.load_state_dict(checkpoint['mini_xception'], strict=False)
         start_epoch = checkpoint['epoch'] + 1
         print(f'\tLoaded checkpoint from {args.pretrained}\n')
         time.sleep(1)
     else:
         print("******************* Start training from scratch *******************\n")
-        # time.sleep(5)
+        time.sleep(2)
+
+    if args.evaluate:
+        test_dataloader = create_test_dataloader(root=args.datapath, batch_size=args.batch_size)
+        validate(mini_xception, loss, test_dataloader, 0)
+        return
+
     # =========== optimizer =========== 
+    # parameters = mini_xception.named_parameters()
+    # for name, p in parameters:
+    #     print(p.requires_grad, name)
+    # return
     optimizer = torch.optim.Adam(mini_xception.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=args.lr_patience, verbose=True)
     # ========================================================================
@@ -80,10 +91,10 @@ def main():
         # =========== train / validate ===========
         train_loss = train_one_epoch(mini_xception, loss, optimizer, train_dataloader, epoch)
         val_loss, accuracy, percision, recall = validate(mini_xception, loss, test_dataloader, epoch)
-        scheduler.step(val_loss)
+        # scheduler.step(val_loss)
         logging.info(f"\ttraining epoch={epoch} .. train_loss={train_loss}")
         logging.info(f"\tvalidation epoch={epoch} .. val_loss={val_loss}")
-        logging.info(f'\tAccuracy = {accuracy} .. Percision = {percision} .. Recall = {recall}')
+        logging.info(f'\tAccuracy = {accuracy*100} % .. Percision = {percision*100} % .. Recall = {recall*100} % \n')
         time.sleep(2)
         # ============= tensorboard =============
         writer.add_scalar('train_loss',train_loss, epoch)
@@ -103,31 +114,33 @@ def main():
 def train_one_epoch(model, criterion, optimizer, dataloader, epoch):
     model.train()
     model.to(device)
-    loss = 0
-    print(model)
+    losses = []
+
     for images, labels in tqdm(dataloader):
 
         images = images.to(device) # (batch, 1, 48, 48)
         labels = labels.to(device) # (batch,)
+        
 
         emotions = model(images)
         # from (batch, 7, 1, 1) to (batch, 7)
         emotions = torch.squeeze(emotions)
 
         loss = criterion(emotions, labels)
+        losses.append(loss.cpu().item())
         print(f'training @ epoch {epoch} .. loss = {round(loss.item(),3)}')
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-    return loss.item()
+    return round(np.mean(losses).item(),3)
+
 
 def validate(model, criterion, dataloader, epoch):
     model.eval()
     model.to(device)
     losses = []
-    TP = 0
 
     total_pred = []
     total_labels = []

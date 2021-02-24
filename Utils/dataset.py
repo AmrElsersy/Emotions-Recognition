@@ -71,6 +71,11 @@ def create_val_dataloader(root='../data', batch_size=2):
     dataloader = DataLoader(dataset, batch_size, shuffle=False)
     return dataloader
 
+def create_test_dataloader(root='../data', batch_size=2):
+    dataset = FER2013(root, mode='test', transform=transforms.ToTensor())
+    dataloader = DataLoader(dataset, batch_size, shuffle=False)
+    return dataloader
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'val'], default='train', help='dataset mode')    

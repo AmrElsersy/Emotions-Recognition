@@ -20,10 +20,10 @@ class SeparableConv2D(nn.Module):
                 https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
                 - Separates channel expantion from depth wise conv 
         """
-        self.depth_wise_conv = nn.Conv2d(in_channels, in_channels, kernel_size=kernel, stride=1, groups=in_channels,padding=1)
+        self.depth_wise_conv = nn.Conv2d(in_channels, in_channels, kernel_size=kernel, stride=1, groups=in_channels,padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.relu = nn.ReLU(inplace=True)
-        self.point_wise_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1)
+        self.point_wise_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
     def forward(self, x):
