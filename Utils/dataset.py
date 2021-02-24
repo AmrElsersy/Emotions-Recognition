@@ -12,8 +12,7 @@ import pandas as pd
 import os
 import numpy as np
 
-from .utils import get_label_emotion
-
+from utils import get_label_emotion, normalization, standerlization
 
 class FER2013(Dataset):
     """
@@ -88,13 +87,22 @@ if __name__ == '__main__':
     for i in range(len(dataset)):
 
         face, emotion = dataset[i]
-        print('emotion',emotion)
-        print('shape',face.shape)
-        print(f"min:{np.min(face)}, max:{np.max(face)}, mean:{np.mean(face)}, std:{np.std(face)}\n")
+        # print('emotion',emotion)
+        # print('shape',face.shape)
+        face = np.copy(face)
+        print(f"before min:{np.min(face)}, max:{np.max(face)}, mean:{np.mean(face)}, std:{np.std(face)}")
+        face1 = normalization(face)
+        face2 = standerlization(face)
+        print(f"after min:{np.min(face)}, max:{np.max(face)}, mean:{np.mean(face)}, std:{np.std(face)}\n")
 
         face = cv2.resize(face, (200,200))
         cv2.putText(face, get_label_emotion(emotion), (0,20), cv2.FONT_HERSHEY_COMPLEX, 1, (255,255,255))
         cv2.imshow('face', face)
+
+        face1 = cv2.resize(face1, (200,200))
+        face2 = cv2.resize(face2, (200,200))
+        cv2.imshow('normalization', face1)
+        cv2.imshow('standerlization', face2)
 
         if cv2.waitKey(0) == 27:
             cv2.destroyAllWindows()
