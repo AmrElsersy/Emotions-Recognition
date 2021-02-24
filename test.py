@@ -35,13 +35,13 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--weight_decay', type=float, default=1e-6, help='optimizer weight decay')
     parser.add_argument('--datapath', type=str, default='data', help='root path of augumented WFLW dataset')
-    parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_80.pth.tar',help='load checkpoint')
     parser.add_argument('--resume', action='store_true', help='resume from pretrained path specified in prev arg')
     parser.add_argument('--savepath', type=str, default='checkpoint/model_weights', help='save checkpoint path')    
     parser.add_argument('--savefreq', type=int, default=5, help="save weights each freq num of epochs")
     parser.add_argument('--logdir', type=str, default='checkpoint/logging', help='logging')    
     parser.add_argument("--lr_patience", default=40, type=int)
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'val'], default='test', help='dataset mode')    
+    parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_30.pth.tar')
     args = parser.parse_args()
     return args
 # ======================================================================
@@ -77,7 +77,8 @@ def main():
             emotions_soft = softmax(emotion.squeeze()).reshape(-1,1).cpu().detach().numpy()
             emotions_soft = np.round(emotions_soft, 3)
             for i, em in enumerate(emotions_soft):
-                print(f'{get_label_emotion(i)} : {em.item()}')
+                em = round(em.item(),3)
+                print(f'{get_label_emotion(i)} : {em}')
             # print(f'softmax {emotions_soft}')
 
             _, emotion = torch.max(emotion, axis=1)

@@ -12,7 +12,7 @@ import pandas as pd
 import os
 import numpy as np
 
-from utils import get_label_emotion, normalization, standerlization
+from .utils import get_label_emotion, normalization, standerlization, normalize_dataset_mode_1, normalize_dataset_mode_255
 
 class FER2013(Dataset):
     """
@@ -52,6 +52,8 @@ class FER2013(Dataset):
         face = np.array(face).reshape(48,48).astype(np.uint8)
 
         if self.transform:
+            face = normalization(face)
+            # face = standerlization(face)
             face = self.transform(face)
 
         return face, emotion
@@ -75,14 +77,35 @@ def create_test_dataloader(root='../data', batch_size=2):
     dataloader = DataLoader(dataset, batch_size, shuffle=False)
     return dataloader
 
+def calculate_dataset_mean_std(dataset:FER2013):
+    n = len(dataset)
+    means = []
+    stds = []
+    for i in range(n):
+        image, _ = dataset[i]
+        # image = image/ 255
+        mean = np.mean(image)
+        std = np.std(image)
+        means.append(mean)
+        stds.append(std)
+        print(f'i={i}, mean = {mean}, std = {std}')
+    mean = np.mean(means)
+    std = np.mean(stds)
+    print(f'\n\t Mean = {mean} ... Std = {std}\n')
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'val'], default='train', help='dataset mode')    
     parser.add_argument('--datapath', type=str, default='../data')
+    parser.add_argument('--mean_std', action='store_true', help='calculate mean std of dataset')
     args = parser.parse_args()
 
     dataset = FER2013(args.datapath, args.mode)
     print(f'dataset size = {len(dataset)}')
+    
+    if args.mean_std:
+        calculate_dataset_mean_std(dataset)
+        exit(0)
  
     for i in range(len(dataset)):
 
@@ -91,7 +114,8 @@ if __name__ == '__main__':
         # print('shape',face.shape)
         face = np.copy(face)
         print(f"before min:{np.min(face)}, max:{np.max(face)}, mean:{np.mean(face)}, std:{np.std(face)}")
-        face1 = normalization(face)
+        face1 = normalize_dataset_mode_255(face)
+        # face1 = normalization(face)
         face2 = standerlization(face)
         print(f"after min:{np.min(face)}, max:{np.max(face)}, mean:{np.mean(face)}, std:{np.std(face)}\n")
 

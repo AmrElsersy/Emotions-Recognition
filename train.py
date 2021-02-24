@@ -41,6 +41,7 @@ def parse_args():
     parser.add_argument('--logdir', type=str, default='checkpoint/logging', help='logging')    
     parser.add_argument("--lr_patience", default=40, type=int)
     parser.add_argument('--evaluate', action='store_true', help='evaluation only')
+    parser.add_argument('--mode', type=str, default='val', choices=['val','test'], help='dataset type for evaluation only')   
     args = parser.parse_args()
     return args
 # ======================================================================
@@ -75,7 +76,13 @@ def main():
         time.sleep(2)
 
     if args.evaluate:
-        test_dataloader = create_test_dataloader(root=args.datapath, batch_size=args.batch_size)
+        if args.mode == 'test':
+            test_dataloader = create_test_dataloader(root=args.datapath, batch_size=args.batch_size)
+        elif args.mode == 'val':
+            test_dataloader = create_val_dataloader(root=args.datapath, batch_size=args.batch_size)
+        else:
+            test_dataloader = create_train_dataloader(root=args.datapath, batch_size=args.batch_size)
+
         validate(mini_xception, loss, test_dataloader, 0)
         return
 
@@ -92,6 +99,7 @@ def main():
         train_loss = train_one_epoch(mini_xception, loss, optimizer, train_dataloader, epoch)
         val_loss, accuracy, percision, recall = validate(mini_xception, loss, test_dataloader, epoch)
         # scheduler.step(val_loss)
+        val_loss, accuracy, percision, recall = round(val_loss,3), round(accuracy,3), round(percision,3), round(recall,3)
         logging.info(f"\ttraining epoch={epoch} .. train_loss={train_loss}")
         logging.info(f"\tvalidation epoch={epoch} .. val_loss={val_loss}")
         logging.info(f'\tAccuracy = {accuracy*100} % .. Percision = {percision*100} % .. Recall = {recall*100} % \n')
@@ -99,6 +107,9 @@ def main():
         # ============= tensorboard =============
         writer.add_scalar('train_loss',train_loss, epoch)
         writer.add_scalar('val_loss',val_loss, epoch)
+        writer.add_scalar('percision',percision, epoch)
+        writer.add_scalar('recall',recall, epoch)
+        writer.add_scalar('accuracy',accuracy, epoch)
         # ============== save model =============
         if epoch % args.savefreq == 0:
             checkpoint_state = {
@@ -176,7 +187,7 @@ def validate(model, criterion, dataloader, epoch):
             total_pred.extend(indexes.cpu().detach().numpy())
             total_labels.extend(labels.cpu().detach().numpy())
 
-            # print(f'validation loss = {round(loss.item(),3)}')
+            print(f'validation loss = {round(loss.item(),3)}')
 
         val_loss = np.mean(losses).item()
         percision = precision_score(total_labels, total_pred, average='macro')
