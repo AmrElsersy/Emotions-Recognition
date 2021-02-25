@@ -5,6 +5,9 @@ email: amrelsersay@gmail.com
 Description: utils functions
 """
 import numpy as np
+import seaborn as sn
+import matplotlib.pyplot as plt
+import pandas as pd
 
 def get_label_emotion(label : int) -> str:
     label_emotion_map = { 
@@ -74,3 +77,10 @@ def normalize_dataset_mode_255(image):
     std = 54.02743338925431
     image = (image - mean) / std
     return image
+
+def visualize_confusion_matrix(confusion_matrix):
+    df_cm = pd.DataFrame(confusion_matrix, range(7), range(7))
+    # plt.figure(figsize=(10,7))
+    sn.set(font_scale=1.4) # for label size
+    sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}) # font size
+    plt.show()

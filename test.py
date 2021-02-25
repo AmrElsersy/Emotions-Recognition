@@ -29,17 +29,8 @@ from Utils.utils import get_label_emotion
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=300, help='num of training epochs')
-    parser.add_argument('--batch_size', type=int, default=1, help="training batch size")
-    parser.add_argument('--tensorboard', type=str, default='checkpoint/tensorboard', help='path log dir of tensorboard')
-    parser.add_argument('--logging', type=str, default='checkpoint/logging', help='path of logging')
-    parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
-    parser.add_argument('--weight_decay', type=float, default=1e-6, help='optimizer weight decay')
     parser.add_argument('--datapath', type=str, default='data', help='root path of augumented WFLW dataset')
     parser.add_argument('--resume', action='store_true', help='resume from pretrained path specified in prev arg')
-    parser.add_argument('--savepath', type=str, default='checkpoint/model_weights', help='save checkpoint path')    
-    parser.add_argument('--savefreq', type=int, default=5, help="save weights each freq num of epochs")
-    parser.add_argument('--logdir', type=str, default='checkpoint/logging', help='logging')    
-    parser.add_argument("--lr_patience", default=40, type=int)
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'val'], default='test', help='dataset mode')    
     parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_30.pth.tar')
     args = parser.parse_args()
@@ -92,8 +83,6 @@ def main():
                 cv2.destroyAllWindows()
                 break
             print('')
-
-
 
 if __name__ == "__main__":
     main()

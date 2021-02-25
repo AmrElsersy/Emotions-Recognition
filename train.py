@@ -22,8 +22,9 @@ cudnn.enabled = True
 from model.model import Mini_Xception
 from model.depthwise_conv import SeparableConv2D
 from Utils.dataset import create_train_dataloader, create_val_dataloader, create_test_dataloader
+from Utils.utils import visualize_confusion_matrix
 
-from sklearn.metrics import precision_score, recall_score, accuracy_score, f1_score
+from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -37,7 +38,7 @@ def parse_args():
     parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_52.pth.tar',help='load checkpoint')
     parser.add_argument('--resume', action='store_true', help='resume from pretrained path specified in prev arg')
     parser.add_argument('--savepath', type=str, default='checkpoint/model_weights', help='save checkpoint path')    
-    parser.add_argument('--savefreq', type=int, default=2, help="save weights each freq num of epochs")
+    parser.add_argument('--savefreq', type=int, default=1, help="save weights each freq num of epochs")
     parser.add_argument('--logdir', type=str, default='checkpoint/logging', help='logging')    
     parser.add_argument("--lr_patience", default=40, type=int)
     parser.add_argument('--evaluate', action='store_true', help='evaluation only')
@@ -193,9 +194,15 @@ def validate(model, criterion, dataloader, epoch):
         percision = precision_score(total_labels, total_pred, average='macro')
         recall = recall_score(total_labels, total_pred, average='macro')
         accuracy = accuracy_score(total_labels, total_pred)
+        conf_matrix = confusion_matrix(total_labels, total_pred, normalize='true')
 
         val_loss, accuracy, percision, recall = round(val_loss,3), round(accuracy,3), round(percision,3), round(recall,3)
+        
         print(f'Val loss = {val_loss} .. Accuracy = {accuracy} .. Percision = {percision} .. Recall = {recall}')
+        if args.evaluate:
+            print('Confusion Matrix\n', conf_matrix)
+            visualize_confusion_matrix(conf_matrix)
+            
         return val_loss, accuracy, percision, recall
 
 if __name__ == "__main__":
