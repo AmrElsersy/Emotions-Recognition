@@ -8,6 +8,24 @@ import numpy as np
 import seaborn as sn
 import matplotlib.pyplot as plt
 import pandas as pd
+import cv2
+from torchvision.transforms.transforms import ToTensor, ToPILImage, RandomCrop, RandomCrop, Resize
+from torchvision.transforms.transforms import RandomRotation, RandomHorizontalFlip, Compose 
+
+def random_rotation(image_in):
+    image = np.copy(image_in)
+    h, w = image.shape[0:2]
+    center = (w//2, h//2)
+    angle =  int(np.random.randint(-10, 10))
+    rotation_matrix = cv2.getRotationMatrix2D(center, angle, 1)
+    image = cv2.warpAffine(image, rotation_matrix, image.shape)
+    return np.copy(image)
+
+def get_transforms():
+    transform = Compose([random_rotation, ToPILImage(), RandomCrop(46), Resize((48,48)),
+                             RandomHorizontalFlip(0.5), ToTensor()])
+    return transform
+    # return ToTensor()
 
 def get_label_emotion(label : int) -> str:
     label_emotion_map = { 
@@ -25,6 +43,14 @@ def tensor_to_numpy(image):
     if type(image) != np.ndarray:
         return image.cpu().squeeze().numpy()
     return image
+
+def histogram_equalization(image):
+    # image = (image*255).astype(np.uint8)
+    equalized = cv2.equalizeHist(image)
+    cv2.imshow('h',equalized)
+    cv2.waitKey(0)
+    # return (equalized/255).astype(np.float32)
+    return equalized
 
 def normalization(face):
     face = tensor_to_numpy(face)
@@ -53,7 +79,7 @@ def standerlization(image):
     min_img = np.min(image)
     max_img = np.max(image)
     image = (image - min_img) / (max_img - min_img)
-    return image
+    return image.astype(np.float32)
 
 # https://machinelearningmastery.com/how-to-manually-scale-image-pixel-data-for-deep-learning/
 
@@ -80,7 +106,6 @@ def normalize_dataset_mode_255(image):
 
 def visualize_confusion_matrix(confusion_matrix):
     df_cm = pd.DataFrame(confusion_matrix, range(7), range(7))
-    # plt.figure(figsize=(10,7))
     sn.set(font_scale=1.4) # for label size
     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}) # font size
     plt.show()

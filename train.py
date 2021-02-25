@@ -23,6 +23,7 @@ from model.model import Mini_Xception
 from model.depthwise_conv import SeparableConv2D
 from Utils.dataset import create_train_dataloader, create_val_dataloader, create_test_dataloader
 from Utils.utils import visualize_confusion_matrix
+from CK import create_CK_dataloader
 
 from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
 
@@ -42,7 +43,7 @@ def parse_args():
     parser.add_argument('--logdir', type=str, default='checkpoint/logging', help='logging')    
     parser.add_argument("--lr_patience", default=40, type=int)
     parser.add_argument('--evaluate', action='store_true', help='evaluation only')
-    parser.add_argument('--mode', type=str, default='val', choices=['val','test'], help='dataset type for evaluation only')   
+    parser.add_argument('--mode', type=str, default='val', choices=['val','test', 'train'], help='dataset type for evaluation only')   
     args = parser.parse_args()
     return args
 # ======================================================================
@@ -61,6 +62,7 @@ def main():
     # ========= dataloaders ===========
     train_dataloader = create_train_dataloader(root=args.datapath, batch_size=args.batch_size)
     test_dataloader = create_val_dataloader(root=args.datapath, batch_size=args.batch_size)
+    # train_dataloader, test_dataloader = create_CK_dataloader(batch_size=args.batch_size)
     start_epoch = 0
     # ======== models & loss ========== 
     mini_xception = Mini_Xception()
@@ -133,11 +135,11 @@ def train_one_epoch(model, criterion, optimizer, dataloader, epoch):
         images = images.to(device) # (batch, 1, 48, 48)
         labels = labels.to(device) # (batch,)
         
-
         emotions = model(images)
         # from (batch, 7, 1, 1) to (batch, 7)
         emotions = torch.squeeze(emotions)
-
+        # print(emotions)
+        # print(labels,'\n')
         loss = criterion(emotions, labels)
         losses.append(loss.cpu().item())
         print(f'training @ epoch {epoch} .. loss = {round(loss.item(),3)}')
@@ -202,7 +204,7 @@ def validate(model, criterion, dataloader, epoch):
         if args.evaluate:
             print('Confusion Matrix\n', conf_matrix)
             visualize_confusion_matrix(conf_matrix)
-            
+
         return val_loss, accuracy, percision, recall
 
 if __name__ == "__main__":

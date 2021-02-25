@@ -11,8 +11,9 @@ import torchvision.transforms.transforms as transforms
 import pandas as pd
 import os
 import numpy as np
+import torch
 
-from .utils import get_label_emotion, normalization, standerlization, normalize_dataset_mode_1, normalize_dataset_mode_255
+from utils import get_label_emotion, normalization, histogram_equalization, standerlization, normalize_dataset_mode_1, normalize_dataset_mode_255, get_transforms
 
 class FER2013(Dataset):
     """
@@ -52,9 +53,16 @@ class FER2013(Dataset):
         face = np.array(face).reshape(48,48).astype(np.uint8)
 
         if self.transform:
-            face = normalization(face)
             # face = standerlization(face)
+            cv2.imshow('original', face)
+            cv2.waitKey(0)
+            face = histogram_equalization(face)
+            face = normalization(face)
+            cv2.imshow('normalized', face)
+            cv2.waitKey(0)
+
             face = self.transform(face)
+            # face = transforms.ToTensor()(face)
 
         return face, emotion
 
@@ -72,8 +80,10 @@ def create_val_dataloader(root='../data', batch_size=2):
     dataloader = DataLoader(dataset, batch_size, shuffle=False)
     return dataloader
 
-def create_test_dataloader(root='../data', batch_size=2):
-    dataset = FER2013(root, mode='test', transform=transforms.ToTensor())
+def create_test_dataloader(root='../data', batch_size=1):
+    # transform = transforms.ToTensor()
+    transform = get_transforms()
+    dataset = FER2013(root, mode='test', transform=transform)
     dataloader = DataLoader(dataset, batch_size, shuffle=False)
     return dataloader
 
@@ -93,12 +103,28 @@ def calculate_dataset_mean_std(dataset:FER2013):
     std = np.mean(stds)
     print(f'\n\t Mean = {mean} ... Std = {std}\n')
 
+def test_dataloader_main():
+    dataloader = create_test_dataloader()    
+    for image, label in dataloader:
+        image = image.squeeze().numpy()
+        cv2.imshow('img', image)
+        print(image.shape)
+        if cv2.waitKey(0) == 27:
+            cv2.destroyAllWindows()
+            break
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'val'], default='train', help='dataset mode')    
     parser.add_argument('--datapath', type=str, default='../data')
     parser.add_argument('--mean_std', action='store_true', help='calculate mean std of dataset')
+    parser.add_argument('--test', action='store_true', help='test augumentation')
+    
     args = parser.parse_args()
+
+    if args.test:
+        test_dataloader_main()
+        exit(0)
 
     dataset = FER2013(args.datapath, args.mode)
     print(f'dataset size = {len(dataset)}')
