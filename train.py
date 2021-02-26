@@ -5,7 +5,7 @@ email: amrelsersay@gmail.com
 Description: Training & Validation
 """
 import numpy as np 
-import argparse
+import argparse, cv2
 import logging
 import time
 import os
@@ -101,7 +101,7 @@ def main():
         # =========== train / validate ===========
         train_loss = train_one_epoch(mini_xception, loss, optimizer, train_dataloader, epoch)
         val_loss, accuracy, percision, recall = validate(mini_xception, loss, test_dataloader, epoch)
-        # scheduler.step(val_loss)
+        scheduler.step(val_loss)
         val_loss, accuracy, percision, recall = round(val_loss,3), round(accuracy,3), round(percision,3), round(recall,3)
         logging.info(f"\ttraining epoch={epoch} .. train_loss={train_loss}")
         logging.info(f"\tvalidation epoch={epoch} .. val_loss={val_loss}")
@@ -147,6 +147,10 @@ def train_one_epoch(model, criterion, optimizer, dataloader, epoch):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
+        # images = images.squeeze().cpu().detach().numpy()
+        # cv2.imshow('f', images[0])
+        # cv2.waitKey(0)
 
     return round(np.mean(losses).item(),3)
 

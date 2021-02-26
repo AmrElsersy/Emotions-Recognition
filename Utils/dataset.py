@@ -13,7 +13,7 @@ import os
 import numpy as np
 import torch
 
-from utils import get_label_emotion, normalization, histogram_equalization, standerlization, normalize_dataset_mode_1, normalize_dataset_mode_255, get_transforms
+from .utils import get_label_emotion, normalization, histogram_equalization, standerlization, normalize_dataset_mode_1, normalize_dataset_mode_255, get_transforms
 
 class FER2013(Dataset):
     """
@@ -54,12 +54,12 @@ class FER2013(Dataset):
 
         if self.transform:
             # face = standerlization(face)
-            cv2.imshow('original', face)
-            cv2.waitKey(0)
+            # cv2.imshow('original', face)
+            # cv2.waitKey(0)
             face = histogram_equalization(face)
             face = normalization(face)
-            cv2.imshow('normalized', face)
-            cv2.waitKey(0)
+            # cv2.imshow('normalized', face)
+            # cv2.waitKey(0)
 
             face = self.transform(face)
             # face = transforms.ToTensor()(face)
@@ -71,7 +71,7 @@ class FER2013(Dataset):
 
 
 def create_train_dataloader(root='../data', batch_size=64):
-    dataset = FER2013(root, mode='train', transform=transforms.ToTensor())
+    dataset = FER2013(root, mode='train', transform=get_transforms())
     dataloader = DataLoader(dataset, batch_size, shuffle=True)
     return dataloader
 

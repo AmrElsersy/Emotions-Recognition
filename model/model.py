@@ -22,27 +22,12 @@ def conv_bn_relu(in_channels, out_channels, kernel_size=3, stride=1, padding=0):
         nn.ReLU(inplace=True)
     )
 
-class SeparableConv2D(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel=3):
-        super(SeparableConv2D, self).__init__()
 
-        self.depth_wise_conv = nn.Conv2d(in_channels, in_channels, kernel_size=kernel, stride=1, 
-                                        groups=in_channels,padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.relu = nn.ReLU(inplace=True)
-        self.point_wise_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(out_channels)
-
-    def forward(self, x):
-        # depth wise
-        x = self.depth_wise_conv(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        # point wise
-        x = self.point_wise_conv(x)
-        x = self.bn2(x)
-        x = self.relu(x)
-        return x
+def SeparableConv2D(in_channels, out_channels, kernel=3):
+    return nn.Sequential(
+        nn.Conv2d(in_channels, in_channels, kernel_size=kernel, stride=1, groups=in_channels,padding=1, bias=False),
+        nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
+    )
 
 class ResidualXceptionBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel=3):

@@ -22,10 +22,10 @@ def random_rotation(image_in):
     return np.copy(image)
 
 def get_transforms():
-    transform = Compose([random_rotation, ToPILImage(), RandomCrop(46), Resize((48,48)),
-                             RandomHorizontalFlip(0.5), ToTensor()])
+    # transform = Compose([random_rotation, ToPILImage(), RandomCrop(46), Resize((48,48)),
+    #                          RandomHorizontalFlip(0.5), ToTensor()])
+    transform = Compose([ToPILImage(), RandomHorizontalFlip(0.5), ToTensor()])
     return transform
-    # return ToTensor()
 
 def get_label_emotion(label : int) -> str:
     label_emotion_map = { 
@@ -47,8 +47,8 @@ def tensor_to_numpy(image):
 def histogram_equalization(image):
     # image = (image*255).astype(np.uint8)
     equalized = cv2.equalizeHist(image)
-    cv2.imshow('h',equalized)
-    cv2.waitKey(0)
+    # cv2.imshow('h',equalized)
+    # cv2.waitKey(0)
     # return (equalized/255).astype(np.float32)
     return equalized
 
