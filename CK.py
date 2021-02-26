@@ -7,7 +7,7 @@ from torchvision.transforms.transforms import RandomRotation, RandomHorizontalFl
 import pandas as pd
 import os
 import numpy as np
-from Utils.utils import normalization
+from utils import normalization
 
 def random_rotation(image):
     h, w = image.shape[0:2]

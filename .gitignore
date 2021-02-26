@@ -6,6 +6,9 @@ __pycache__/
 *.dat
 *.csv
 *.gz
+*.pth
+CK+48/
+*.0
 tensorboard/
 landmarks_detector.py
 # C extensions

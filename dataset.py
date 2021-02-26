@@ -13,7 +13,7 @@ import os
 import numpy as np
 import torch
 
-from .utils import get_label_emotion, normalization, histogram_equalization, standerlization, normalize_dataset_mode_1, normalize_dataset_mode_255, get_transforms
+from utils import get_label_emotion, normalization, histogram_equalization, standerlization, normalize_dataset_mode_1, normalize_dataset_mode_255, get_transforms
 
 class FER2013(Dataset):
     """

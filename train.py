@@ -20,9 +20,8 @@ cudnn.benchmark = True
 cudnn.enabled = True
 
 from model.model import Mini_Xception
-from model.depthwise_conv import SeparableConv2D
-from Utils.dataset import create_train_dataloader, create_val_dataloader, create_test_dataloader
-from Utils.utils import visualize_confusion_matrix
+from dataset import create_train_dataloader, create_val_dataloader, create_test_dataloader
+from utils import visualize_confusion_matrix
 from CK import create_CK_dataloader
 
 from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix

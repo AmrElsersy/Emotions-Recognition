@@ -22,9 +22,8 @@ import cv2
 import torchvision.transforms.transforms as transforms
 
 from model.model import Mini_Xception
-from model.depthwise_conv import SeparableConv2D
-from Utils.dataset import create_train_dataloader, create_val_dataloader, FER2013
-from Utils.utils import get_label_emotion
+from dataset import create_train_dataloader, create_val_dataloader, FER2013
+from utils import get_label_emotion
 
 def parse_args():
     parser = argparse.ArgumentParser()
