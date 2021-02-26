@@ -57,7 +57,7 @@ class FER2013(Dataset):
             # cv2.imshow('original', face)
             # cv2.waitKey(0)
             face = histogram_equalization(face)
-            face = normalization(face)
+            # face = normalization(face)
             # cv2.imshow('normalized', face)
             # cv2.waitKey(0)
 

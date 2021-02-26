@@ -106,6 +106,6 @@ def normalize_dataset_mode_255(image):
 
 def visualize_confusion_matrix(confusion_matrix):
     df_cm = pd.DataFrame(confusion_matrix, range(7), range(7))
-    sn.set(font_scale=1.4) # for label size
+    sn.set(font_scale=1.1) # for label size
     sn.heatmap(df_cm, annot=True, annot_kws={"size": 16}) # font size
     plt.show()
