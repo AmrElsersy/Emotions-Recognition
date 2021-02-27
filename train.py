@@ -100,7 +100,7 @@ def main():
         # =========== train / validate ===========
         train_loss = train_one_epoch(mini_xception, loss, optimizer, train_dataloader, epoch)
         val_loss, accuracy, percision, recall = validate(mini_xception, loss, test_dataloader, epoch)
-        # scheduler.step(val_loss)
+        scheduler.step(val_loss)
         val_loss, accuracy, percision, recall = round(val_loss,3), round(accuracy,3), round(percision,3), round(recall,3)
         logging.info(f"\ttraining epoch={epoch} .. train_loss={train_loss}")
         logging.info(f"\tvalidation epoch={epoch} .. val_loss={val_loss}")
