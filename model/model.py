@@ -74,6 +74,18 @@ class Mini_Xception(nn.Module):
     def __init__(self):
         super(Mini_Xception, self).__init__()
 
+        # self.conv1 = conv_bn_relu(1, 32, kernel_size=3, stride=1, padding=0)
+        # self.conv2 = conv_bn_relu(32, 64, kernel_size=3, stride=1, padding=0)
+        # self.residual_blocks = nn.ModuleList([
+        #     ResidualXceptionBlock(64 , 128).to(device),
+        #     ResidualXceptionBlock(128, 256).to(device),
+        #     ResidualXceptionBlock(256, 512).to(device),
+        #     ResidualXceptionBlock(512, 1024).to(device)            
+        # ])
+
+        # self.conv3 = nn.Conv2d(1024, 7, kernel_size=3, stride=1, padding=1)
+
+
         self.conv1 = conv_bn_relu(1, 8, kernel_size=3, stride=1, padding=0)
         self.conv2 = conv_bn_relu(8, 8, kernel_size=3, stride=1, padding=0)
         self.residual_blocks = nn.ModuleList([
@@ -82,11 +94,9 @@ class Mini_Xception(nn.Module):
             ResidualXceptionBlock(32, 64).to(device),
             ResidualXceptionBlock(64, 128).to(device)            
         ])
-
         self.conv3 = nn.Conv2d(128, 7, kernel_size=3, stride=1, padding=1)
-        # self.global_avg_pool = nn.AvgPool2d(kernel_size=4)
+
         self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
-        # self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         
