@@ -29,7 +29,7 @@ from sklearn.metrics import precision_score, recall_score, accuracy_score, confu
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=300, help='num of training epochs')
-    parser.add_argument('--batch_size', type=int, default=16, help="training batch size")
+    parser.add_argument('--batch_size', type=int, default=15, help="training batch size")
     parser.add_argument('--tensorboard', type=str, default='checkpoint/tensorboard', help='path log dir of tensorboard')
     parser.add_argument('--logging', type=str, default='checkpoint/logging', help='path of logging')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
