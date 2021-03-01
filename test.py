@@ -22,7 +22,7 @@ import cv2
 import torchvision.transforms.transforms as transforms
 
 from model.model import Mini_Xception
-from dataset import create_train_dataloader, create_val_dataloader, FER2013
+from dataset import FER2013
 from utils import get_label_emotion
 
 def parse_args():
@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument('--datapath', type=str, default='data', help='root path of augumented WFLW dataset')
     parser.add_argument('--resume', action='store_true', help='resume from pretrained path specified in prev arg')
     parser.add_argument('--mode', type=str, choices=['train', 'test', 'val'], default='test', help='dataset mode')    
-    parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_30.pth.tar')
+    parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_75.pth.tar')
     args = parser.parse_args()
     return args
 # ======================================================================
@@ -44,7 +44,7 @@ def main():
     mini_xception.to(device)
     mini_xception.eval()
 
-    checkpoint = torch.load(args.pretrained)
+    checkpoint = torch.load(args.pretrained, map_location=device)
     mini_xception.load_state_dict(checkpoint['mini_xception'], strict=False)
     print(f'\tLoaded checkpoint from {args.pretrained}\n')
 
@@ -53,23 +53,21 @@ def main():
     
     with torch.no_grad():
         for i in range(len(dataset)):
-
             face, label = dataset[i]
             temp_face = face.squeeze().numpy()
-            # print('label',label, 'shape',face.shape)
 
             face = face.to(device)
             face = torch.unsqueeze(face, 0)
             emotion = mini_xception(face)
 
-            torch.set_printoptions(precision=6)
-            softmax = nn.Softmax()
-            emotions_soft = softmax(emotion.squeeze()).reshape(-1,1).cpu().detach().numpy()
-            emotions_soft = np.round(emotions_soft, 3)
-            for i, em in enumerate(emotions_soft):
-                em = round(em.item(),3)
-                print(f'{get_label_emotion(i)} : {em}')
-            # print(f'softmax {emotions_soft}')
+            # torch.set_printoptions(precision=6)
+            # softmax = nn.Softmax()
+            # emotions_soft = softmax(emotion.squeeze()).reshape(-1,1).cpu().detach().numpy()
+            # emotions_soft = np.round(emotions_soft, 3)
+            # for i, em in enumerate(emotions_soft):
+            #     em = round(em.item(),3)
+            #     print(f'{get_label_emotion(i)} : {em}')
+            # # print(f'softmax {emotions_soft}')
 
             _, emotion = torch.max(emotion, axis=1)
 
@@ -81,7 +79,6 @@ def main():
             if cv2.waitKey(0) == 27:
                 cv2.destroyAllWindows()
                 break
-            print('')
 
 if __name__ == "__main__":
     main()

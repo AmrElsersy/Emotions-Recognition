@@ -56,7 +56,7 @@ def main(args):
         face_detector = DnnDetector(root)
 
     video = cv2.VideoCapture(0) # 480, 640
-    # video = cv2.VideoCapture("face_detector/3.mp4") # (720, 1280) or (1080, 1920)
+    # video = cv2.VideoCapture("face_detector/1.mp4") # (720, 1280) or (1080, 1920)
     t1 = 0
     t2 = 0
     print('video.isOpened:', video.isOpened())
@@ -82,19 +82,17 @@ def main(args):
             input_face = cv2.resize(input_face, (48,48))
         
             # test_preprocess(input_face)
-
             input_face = histogram_equalization(input_face)
-            input_face = normalization(input_face)
+            # cv2.imshow('face', input_face)
 
             input_face = transforms.ToTensor()(input_face).to(device)
             input_face = torch.unsqueeze(input_face, 0)
-            # print(input_face.shape)
 
             with torch.no_grad():
                 input_face = input_face.to(device)
-                # t = time.time()
+                t = time.time()
                 emotion = mini_xception(input_face)
-                # print(f'time={(time.time()-t) * 1000 } ms')
+                print(f'\ntime={(time.time()-t) * 1000 } ms')
 
                 torch.set_printoptions(precision=6)
                 softmax = torch.nn.Softmax()
@@ -116,13 +114,12 @@ def main(args):
         cv2.imshow("Video", frame)   
         if cv2.waitKey(1) & 0xff == 27:
             video.release()
-            cv2.destroyAllWindows()
             break
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--haar', action='store_true', help='run the haar cascade face detector')
-    parser.add_argument('--pretrained',type=str,default='checkpoint/model_weights/weights_epoch_53.pth.tar' 
+    parser.add_argument('--pretrained',type=str,default='checkpoint/model_weights/weights_epoch_75.pth.tar' 
                         ,help='load weights')
     parser.add_argument('--head_pose', action='store_true', help='visualization of head pose euler angles')
     args = parser.parse_args()

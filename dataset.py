@@ -53,16 +53,9 @@ class FER2013(Dataset):
         face = np.array(face).reshape(48,48).astype(np.uint8)
 
         if self.transform:
-            # face = standerlization(face)
-            # cv2.imshow('original', face)
-            # cv2.waitKey(0)
             face = histogram_equalization(face)
             # face = normalization(face)
-            # cv2.imshow('normalized', face)
-            # cv2.waitKey(0)
-
             face = self.transform(face)
-            # face = transforms.ToTensor()(face)
 
         return face, emotion
 

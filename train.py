@@ -22,7 +22,6 @@ cudnn.enabled = True
 from model.model import Mini_Xception
 from dataset import create_train_dataloader, create_val_dataloader, create_test_dataloader
 from utils import visualize_confusion_matrix
-from CK import create_CK_dataloader
 
 from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
 
@@ -68,7 +67,7 @@ def main():
     loss = nn.CrossEntropyLoss()
     # ========= load weights ===========
     if args.resume or args.evaluate:
-        checkpoint = torch.load(args.pretrained)
+        checkpoint = torch.load(args.pretrained, map_location=device)
         mini_xception.load_state_dict(checkpoint['mini_xception'], strict=False)
         start_epoch = checkpoint['epoch'] + 1
         print(f'\tLoaded checkpoint from {args.pretrained}\n')
@@ -175,18 +174,7 @@ def validate(model, criterion, dataloader, epoch):
             loss = criterion(emotions, labels)            
             losses.append(loss.cpu().item())
 
-            # softmax = nn.Softmax()
-            # logsoft = nn.LogSoftmax()
-            # emotions_soft = softmax(emotions)
-            # emotions_logsoft = logsoft(emotions)
-            # l2 = nn.NLLLoss()
-            # loss2 = l2(emotions_logsoft, labels)
-            # print(f'softmax {emotions_soft}')
-            # print(f'log softmax {emotions_logsoft}')
-            # print(f'NLL {loss2}')
-            # print(f'emotions {emotions}\n')
             # # ============== Evaluation ===============
-
             # index of the max value of each sample (shape = (batch,))
             _, indexes = torch.max(emotions, axis=1)
             # print(indexes.shape, labels.shape)
@@ -199,12 +187,12 @@ def validate(model, criterion, dataloader, epoch):
         percision = precision_score(total_labels, total_pred, average='macro')
         recall = recall_score(total_labels, total_pred, average='macro')
         accuracy = accuracy_score(total_labels, total_pred)
-        conf_matrix = confusion_matrix(total_labels, total_pred, normalize='true')
 
-        val_loss, accuracy, percision, recall = round(val_loss,3), round(accuracy,3), round(percision,3), round(recall,3)
-        
+        val_loss, accuracy, percision, recall = round(val_loss,3), round(accuracy,3), round(percision,3), round(recall,3)    
         print(f'Val loss = {val_loss} .. Accuracy = {accuracy} .. Percision = {percision} .. Recall = {recall}')
+
         if args.evaluate:
+            conf_matrix = confusion_matrix(total_labels, total_pred, normalize='true')
             print('Confusion Matrix\n', conf_matrix)
             visualize_confusion_matrix(conf_matrix)
 
