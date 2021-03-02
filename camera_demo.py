@@ -4,6 +4,7 @@ email: amrelsersay@gmail.com
 -----------------------------------------------------------------------------------
 Description: Live Camera Demo using opencv dnn face detection & Emotion Recognition
 """
+import enum
 import sys
 import time
 import argparse
@@ -18,7 +19,7 @@ from face_detector.face_detector import DnnDetector, HaarCascadeDetector
 
 from model.model import Mini_Xception
 from utils import get_label_emotion, normalization, histogram_equalization, standerlization
-
+from face_alignment.face_alignment import FaceAlignment
 
 sys.path.insert(1, 'face_detector')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -46,6 +47,7 @@ def main(args):
     # Load model
     checkpoint = torch.load(args.pretrained, map_location=device)
     mini_xception.load_state_dict(checkpoint['mini_xception'])
+    face_alignment = FaceAlignment()
 
     # Face detection
     root = 'face_detector'
@@ -74,16 +76,12 @@ def main(args):
         for face in faces:
             (x,y,w,h) = face
 
-            cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 3)
-
             # preprocessing
-            input_face = frame[y:y+h, x:x+w]
-            input_face = cv2.cvtColor(input_face, cv2.COLOR_BGR2GRAY)
+            input_face = face_alignment.frontalize_face(face, frame)
             input_face = cv2.resize(input_face, (48,48))
-        
             # test_preprocess(input_face)
             input_face = histogram_equalization(input_face)
-            # cv2.imshow('face', input_face)
+            cv2.imshow('face', input_face)
 
             input_face = transforms.ToTensor()(input_face).to(device)
             input_face = torch.unsqueeze(input_face, 0)
@@ -92,7 +90,7 @@ def main(args):
                 input_face = input_face.to(device)
                 t = time.time()
                 emotion = mini_xception(input_face)
-                print(f'\ntime={(time.time()-t) * 1000 } ms')
+                # print(f'\ntime={(time.time()-t) * 1000 } ms')
 
                 torch.set_printoptions(precision=6)
                 softmax = torch.nn.Softmax()
@@ -100,7 +98,7 @@ def main(args):
                 emotions_soft = np.round(emotions_soft, 3)
                 for i, em in enumerate(emotions_soft):
                     em = round(em.item(),3)
-                    print(f'{get_label_emotion(i)} : {em}')
+                    # print(f'{get_label_emotion(i)} : {em}')
 
                 emotion = torch.argmax(emotion)                
                 percentage = round(emotions_soft[emotion].item(), 2)
@@ -109,7 +107,8 @@ def main(args):
 
                 cv2.putText(frame, emotion, (x,y-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0))
                 cv2.putText(frame, str(percentage), (x + w - 40,y-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0))
-
+                cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 3)
+    
         cv2.putText(frame, str(fps), (10,25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0))
         cv2.imshow("Video", frame)   
         if cv2.waitKey(1) & 0xff == 27:

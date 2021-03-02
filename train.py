@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--weight_decay', type=float, default=1e-6, help='optimizer weight decay')
     parser.add_argument('--datapath', type=str, default='data', help='root path of augumented WFLW dataset')
-    parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_52.pth.tar',help='load checkpoint')
+    parser.add_argument('--pretrained', type=str,default='checkpoint/model_weights/weights_epoch_75.pth.tar',help='load checkpoint')
     parser.add_argument('--resume', action='store_true', help='resume from pretrained path specified in prev arg')
     parser.add_argument('--savepath', type=str, default='checkpoint/model_weights', help='save checkpoint path')    
     parser.add_argument('--savefreq', type=int, default=1, help="save weights each freq num of epochs")
