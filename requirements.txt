@@ -1,0 +1,10 @@
+
+numpy==1.19.4
+torch==1.7.1
+torchvision==0.8.2
+tensorboard==2.4.1
+tensorboardX==2.0
+tqdm==4.55.0
+sklearn
+pandas
+seaborn
