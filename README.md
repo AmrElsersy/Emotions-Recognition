@@ -4,21 +4,22 @@
 A Pytorch implementation of "Real-time Convolutional Neural Networks for Emotion and Gender Classification" (mini-Xception) [Paper](https://arxiv.org/pdf/1710.07557.pdf)
 
 
-#### Demo
-![]()
+## Demo
+
+![1](https://user-images.githubusercontent.com/35613645/116496324-162c3c00-a8a5-11eb-9701-414406b745d1.gif)
 
 
-##### mini-Xception
+#### mini-Xception
 <img src="https://user-images.githubusercontent.com/35613645/113336812-365cef80-9327-11eb-992a-f88bf18db550.png" width="400" height="400">
 
 
-##### How to Install
+#### How to Install
 ```
  $ pip3 install -r requirements.txt
  ```
  Note that it can be run on lower versions of Pytorch so replace the versions with yours
 
-##### install opencv & dnn from source (optional)
+#### install opencv & dnn from source (optional)
 Both opencv dnn & haar cascade are used for face detection, if you want to use haar cascade you can skip this part.
 
 install dependencies 
@@ -46,8 +47,8 @@ if you **don't** want to use **dnn** modules just setup opencv with regular way
 sudo apt-get install python3-opencv
 ```
 
-##### Run Camera Demo
-Live camera demo 
+#### Run Camera Demo
+##### Live camera demo 
 ```python
 $ python3 camera_demo.py
 
@@ -55,12 +56,24 @@ $ python3 camera_demo.py
 $ python3 camera_demo.py --haar
 ```
 
+### Test 
+##### image test
+```
+# replace $PATH_TO_IMAGE with your relative(or global) path to the image 
+$ python3 camera_demo.py --image --path PATH_TO_IMAGE
+```
+##### video test
+```
+$ python3 camera_demo.py --path PATH_TO_VIDEO
+```
+
+
 #### Face Preprocessing
 - Histogram Equalization for iliumination normalization 
 - Face Alignment using dlib landmarks
 ##### Demo
 
-![]()
+![2](https://user-images.githubusercontent.com/35613645/116496346-22b09480-a8a5-11eb-9715-cefb41d221cc.gif)
 
 
 ### FER2013 Dataset
