@@ -24,21 +24,6 @@ from face_alignment.face_alignment import FaceAlignment
 sys.path.insert(1, 'face_detector')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def test_preprocess(input_face):
-    histogram = histogram_equalization(input_face)
-    normalized = normalization(input_face)
-    normalized_histogram = normalization(histogram)
-
-    shape = (200,200)
-    histogram = cv2.resize(histogram, shape)
-    normalized = cv2.resize(normalized, shape)
-    normalized_histogram = cv2.resize(normalized_histogram, shape)
-
-    cv2.imshow('normal', normalized)
-    cv2.imshow('normal_histogram', normalized_histogram)
-    cv2.imshow('histogram', histogram)
-
-
 def main(args):
     # Model
     mini_xception = Mini_Xception().to(device)
@@ -57,13 +42,28 @@ def main(args):
     else:
         face_detector = DnnDetector(root)
 
-    video = cv2.VideoCapture(0) # 480, 640
-    # video = cv2.VideoCapture("face_detector/1.mp4") # (720, 1280) or (1080, 1920)
+    video = None
+    isOpened = False
+    if not args.image:
+        if args.path:
+            video = cv2.VideoCapture(args.path) 
+        else:
+            video = cv2.VideoCapture(0) # 480, 640
+        isOpened = video.isOpened()
+        print('video.isOpened:', isOpened)
+    
     t1 = 0
     t2 = 0
-    print('video.isOpened:', video.isOpened())
-    while video.isOpened():
-        _, frame = video.read()
+    
+    while args.image or isOpened:
+        if args.image:
+            frame = cv2.imread(args.path)
+        else:
+            _, frame = video.read()
+            isOpened = video.isOpened()    
+        # if loaded video or image (not live camera) .. resize it 
+        if args.path:
+            frame = cv2.resize(frame, (640, 480))
 
         # time
         t2 = time.time()
@@ -79,9 +79,9 @@ def main(args):
             # preprocessing
             input_face = face_alignment.frontalize_face(face, frame)
             input_face = cv2.resize(input_face, (48,48))
-            # test_preprocess(input_face)
+
             input_face = histogram_equalization(input_face)
-            cv2.imshow('face', input_face)
+            cv2.imshow('input face', cv2.resize(input_face, (120, 120)))
 
             input_face = transforms.ToTensor()(input_face).to(device)
             input_face = torch.unsqueeze(input_face, 0)
@@ -105,8 +105,10 @@ def main(args):
                 emotion = emotion.squeeze().cpu().detach().item()
                 emotion = get_label_emotion(emotion)
 
-                cv2.putText(frame, emotion, (x,y-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0))
-                cv2.putText(frame, str(percentage), (x + w - 40,y-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0))
+                frame[y-30:y, x:x+w] = (50,50,50)
+                cv2.putText(frame, emotion, (x,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,200,200))
+                cv2.putText(frame, str(percentage), (x + w - 40,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                            (200,200,0))
                 cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 3)
     
         cv2.putText(frame, str(fps), (10,25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0))
@@ -121,6 +123,8 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained',type=str,default='checkpoint/model_weights/weights_epoch_75.pth.tar' 
                         ,help='load weights')
     parser.add_argument('--head_pose', action='store_true', help='visualization of head pose euler angles')
+    parser.add_argument('--path', type=str, default='', help='path to video to test')
+    parser.add_argument('--image', action='store_true', help='specify if you test image or not')
     args = parser.parse_args()
 
     main(args)
